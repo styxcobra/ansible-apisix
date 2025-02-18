@@ -3,7 +3,6 @@
   gather_facts: yes
   tasks:
 
-    # 🔹 确保 Helm 安装（适用于 AWX 任务容器）
     - name: Install Helm if not present
       shell: |
         if ! command -v helm &> /dev/null; then
@@ -12,38 +11,32 @@
           mv linux-amd64/helm /usr/local/bin/helm
           chmod +x /usr/local/bin/helm
           rm -rf linux-amd64 helm-v3.17.1-linux-amd64.tar.gz
+          echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bashrc
         fi
       args:
         executable: /bin/bash
 
-    # 🔹 跳过 macOS 相关步骤（AWX 运行在 Linux 容器里，不需要 Homebrew）
+    - name: Verify Helm installation
+      command: /usr/local/bin/helm version
+      register: helm_version
+      changed_when: false
 
-    # 🔹 确保 Helm repo 存在
+    - name: Show Helm version
+      debug:
+        msg: "{{ helm_version.stdout }}"
+
     - name: Add APISIX Helm repo
-      command: helm repo add apisix https://charts.apiseven.com
+      command: /usr/local/bin/helm repo add apisix https://charts.apiseven.com
       changed_when: false
 
     - name: Update Helm repo
-      command: helm repo update
+      command: /usr/local/bin/helm repo update
       changed_when: false
 
-    # 🔹 部署 APISIX
     - name: Deploy APISIX using Helm
-      command: helm install apisix apisix/apisix --namespace apisix --create-namespace
+      command: /usr/local/bin/helm install apisix apisix/apisix --namespace apisix --create-namespace
       register: helm_output
 
     - name: Display Helm install output
       debug:
         msg: "{{ helm_output.stdout }}"
-
-    # 🔹 确保 APISIX 运行
-    - name: Ensure APISIX is running in Kubernetes
-      shell: kubectl get pods -n apisix
-      register: k8s_status
-      until: "'Running' in k8s_status.stdout"
-      retries: 5
-      delay: 10
-
-    # 🔹 端口转发（仅适用于本地环境）
-    - name: Expose APISIX service for local access
-      shell: kubectl port-forward --namespace apisix svc/apisix-gateway 9080:80 &
