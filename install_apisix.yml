@@ -1,25 +1,37 @@
-- name: Install Apache APISIX
-  hosts: all
-  become: yes
+- name: Deploy Apache APISIX on MacBook Pro
+  hosts: localhost
+  gather_facts: no
   tasks:
-    - name: Update system packages
-      apt:
-        update_cache: yes
-      when: ansible_os_family == "Debian"
 
-    - name: Install required dependencies
-      apt:
-        name: ['curl', 'wget', 'tar', 'openresty', 'etcd']
-        state: present
-      when: ansible_os_family == "Debian"
-
-    - name: Download and install APISIX
+    - name: Ensure Docker is running
       shell: |
-        curl -fsSL https://raw.githubusercontent.com/apache/apisix/main/utils/install.sh | sh
+        if ! pgrep -x "Docker" > /dev/null; then
+          open --background -a Docker
+          sleep 10
+        fi
       args:
         executable: /bin/bash
 
-    - name: Start APISIX service
-      shell: |
-        apisix start
+    - name: Clone APISIX Docker repo
+      git:
+        repo: 'https://github.com/apache/apisix-docker.git'
+        dest: '/tmp/apisix-docker'
+        update: yes
 
+    - name: Start APISIX using Docker Compose
+      shell: |
+        cd /tmp/apisix-docker/example
+        docker-compose up -d
+      args:
+        executable: /bin/bash
+
+    - name: Check if APISIX is running
+      uri:
+        url: "http://127.0.0.1:9080"
+        method: GET
+        status_code: 404
+      register: apisix_status
+
+    - name: Show APISIX status
+      debug:
+        msg: "{{ apisix_status }}"
