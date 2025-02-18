@@ -1,0 +1,25 @@
+- name: Install Apache APISIX
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update system packages
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install required dependencies
+      apt:
+        name: ['curl', 'wget', 'tar', 'openresty', 'etcd']
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Download and install APISIX
+      shell: |
+        curl -fsSL https://raw.githubusercontent.com/apache/apisix/main/utils/install.sh | sh
+      args:
+        executable: /bin/bash
+
+    - name: Start APISIX service
+      shell: |
+        apisix start
+
