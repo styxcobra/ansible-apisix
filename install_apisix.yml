@@ -21,7 +21,7 @@
     - name: Start APISIX using Docker Compose
       shell: |
         cd /tmp/apisix-docker/example
-        docker-compose up -d
+        /usr/local/bin/docker-compose up -d
       args:
         executable: /bin/bash
 
