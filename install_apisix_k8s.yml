@@ -1,38 +1,43 @@
-- name: Install Helm if not present
-  shell: |
-    if ! command -v helm &> /dev/null; then
-      curl -LO https://get.helm.sh/helm-v3.17.1-linux-amd64.tar.gz
-      tar -zxvf helm-v3.17.1-linux-amd64.tar.gz
-      mkdir -p /home/ansible/bin
-      mv linux-amd64/helm /home/ansible/bin/helm
-      chmod +x /home/ansible/bin/helm
-      rm -rf linux-amd64 helm-v3.17.1-linux-amd64.tar.gz
-      echo 'export PATH="/home/ansible/bin:$PATH"' >> ~/.bashrc
-    fi
-  args:
-    executable: /bin/bash
+- name: Install Apache APISIX on Kubernetes
+  hosts: localhost
+  gather_facts: no
+  tasks:
 
-- name: Verify Helm installation
-  shell: source ~/.bashrc && /home/ansible/bin/helm version
-  register: helm_version
-  changed_when: false
+    - name: Install Helm if not present
+      shell: |
+        if ! command -v helm &> /dev/null; then
+          curl -LO https://get.helm.sh/helm-v3.17.1-linux-amd64.tar.gz
+          tar -zxvf helm-v3.17.1-linux-amd64.tar.gz
+          mkdir -p /home/ansible/bin
+          mv linux-amd64/helm /home/ansible/bin/helm
+          chmod +x /home/ansible/bin/helm
+          rm -rf linux-amd64 helm-v3.17.1-linux-amd64.tar.gz
+          echo 'export PATH="/home/ansible/bin:$PATH"' >> ~/.bashrc
+        fi
+      args:
+        executable: /bin/bash
 
-- name: Show Helm version
-  debug:
-    msg: "{{ helm_version.stdout }}"
+    - name: Verify Helm installation
+      shell: source ~/.bashrc && /home/ansible/bin/helm version
+      register: helm_version
+      changed_when: false
 
-- name: Add APISIX Helm repo
-  command: /home/ansible/bin/helm repo add apisix https://charts.apiseven.com
-  changed_when: false
+    - name: Show Helm version
+      debug:
+        msg: "{{ helm_version.stdout }}"
 
-- name: Update Helm repo
-  command: /home/ansible/bin/helm repo update
-  changed_when: false
+    - name: Add APISIX Helm repo
+      command: /home/ansible/bin/helm repo add apisix https://charts.apiseven.com
+      changed_when: false
 
-- name: Deploy APISIX using Helm
-  command: /home/ansible/bin/helm install apisix apisix/apisix --namespace apisix --create-namespace
-  register: helm_output
+    - name: Update Helm repo
+      command: /home/ansible/bin/helm repo update
+      changed_when: false
 
-- name: Display Helm install output
-  debug:
-    msg: "{{ helm_output.stdout }}"
+    - name: Deploy APISIX using Helm
+      command: /home/ansible/bin/helm install apisix apisix/apisix --namespace apisix --create-namespace
+      register: helm_output
+
+    - name: Display Helm install output
+      debug:
+        msg: "{{ helm_output.stdout }}"
