@@ -25,8 +25,6 @@
 
     - name: Deploy APISIX using Helm
       command: helm install apisix apisix/apisix --namespace apisix --create-namespace
-      args:
-        chdir: /Users/LONG/apisix
       register: helm_output
 
     - name: Display Helm install output
