@@ -30,3 +30,13 @@
     - name: Display Helm install output
       debug:
         msg: "{{ helm_output.stdout }}"
+
+    - name: Ensure APISIX is running in Kubernetes
+      shell: kubectl get pods -n apisix
+      register: k8s_status
+      until: "'Running' in k8s_status.stdout"
+      retries: 5
+      delay: 10
+
+    - name: Expose APISIX service for local access
+      shell: kubectl port-forward --namespace apisix svc/apisix-gateway 9080:80 &
