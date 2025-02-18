@@ -3,18 +3,22 @@
   gather_facts: yes
   tasks:
 
-    - name: Ensure Homebrew is installed (for macOS)
-      shell: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-      when: ansible_os_family == "Darwin"
+    # 🔹 确保 Helm 安装（适用于 AWX 任务容器）
+    - name: Install Helm if not present
+      shell: |
+        if ! command -v helm &> /dev/null; then
+          curl -LO https://get.helm.sh/helm-v3.17.1-linux-amd64.tar.gz
+          tar -zxvf helm-v3.17.1-linux-amd64.tar.gz
+          mv linux-amd64/helm /usr/local/bin/helm
+          chmod +x /usr/local/bin/helm
+          rm -rf linux-amd64 helm-v3.17.1-linux-amd64.tar.gz
+        fi
+      args:
+        executable: /bin/bash
 
-    - name: Install Kubernetes tools (kubectl, helm)
-      shell: brew install kubectl helm
-      when: ansible_os_family == "Darwin"
+    # 🔹 跳过 macOS 相关步骤（AWX 运行在 Linux 容器里，不需要 Homebrew）
 
-    - name: Start minikube (if not running)
-      shell: minikube status || minikube start
-      when: ansible_os_family == "Darwin"
-
+    # 🔹 确保 Helm repo 存在
     - name: Add APISIX Helm repo
       command: helm repo add apisix https://charts.apiseven.com
       changed_when: false
@@ -23,6 +27,7 @@
       command: helm repo update
       changed_when: false
 
+    # 🔹 部署 APISIX
     - name: Deploy APISIX using Helm
       command: helm install apisix apisix/apisix --namespace apisix --create-namespace
       register: helm_output
@@ -31,6 +36,7 @@
       debug:
         msg: "{{ helm_output.stdout }}"
 
+    # 🔹 确保 APISIX 运行
     - name: Ensure APISIX is running in Kubernetes
       shell: kubectl get pods -n apisix
       register: k8s_status
@@ -38,5 +44,6 @@
       retries: 5
       delay: 10
 
+    # 🔹 端口转发（仅适用于本地环境）
     - name: Expose APISIX service for local access
       shell: kubectl port-forward --namespace apisix svc/apisix-gateway 9080:80 &
