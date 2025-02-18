@@ -40,3 +40,4 @@
     - name: Display Helm install output
       debug:
         msg: "{{ helm_output.stdout }}"
+
