@@ -1,0 +1,34 @@
+- name: Install Apache APISIX on Kubernetes
+  hosts: localhost
+  gather_facts: yes
+  tasks:
+
+    - name: Ensure Homebrew is installed (for macOS)
+      shell: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      when: ansible_os_family == "Darwin"
+
+    - name: Install Kubernetes tools (kubectl, helm)
+      shell: brew install kubectl helm
+      when: ansible_os_family == "Darwin"
+
+    - name: Start minikube (if not running)
+      shell: minikube status || minikube start
+      when: ansible_os_family == "Darwin"
+
+    - name: Add APISIX Helm repo
+      command: helm repo add apisix https://charts.apiseven.com
+      changed_when: false
+
+    - name: Update Helm repo
+      command: helm repo update
+      changed_when: false
+
+    - name: Deploy APISIX using Helm
+      command: helm install apisix apisix/apisix --namespace apisix --create-namespace
+      args:
+        chdir: /Users/LONG/apisix
+      register: helm_output
+
+    - name: Display Helm install output
+      debug:
+        msg: "{{ helm_output.stdout }}"
