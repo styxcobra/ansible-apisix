@@ -54,7 +54,7 @@
     - name: 运行 APISIX 3.9.1-debian 容器
       shell: |
         /usr/local/bin/docker run -d --name apisix \
-          --network=host \
+          --network=bridge \
           -p 9080:9080 -p 9443:9443 \
           -e APISIX_ETCD_HOST="http://172.17.0.1:2379" \
           apache/apisix:3.9.1-debian
