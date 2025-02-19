@@ -1,37 +1,36 @@
-- name: Deploy Apache APISIX on MacBook Pro
-  hosts: localhost
-  gather_facts: no
+- name: Install and Start APISIX on MacBook Pro
+  hosts: all
+  become: yes
   tasks:
+    - name: 确保 Docker 正在运行
+      shell: systemctl start docker || open -a Docker
+      ignore_errors: yes
 
-    - name: Ensure Docker is running
-      shell: |
-        if ! pgrep -x "Docker" > /dev/null; then
-          open --background -a Docker
-          sleep 10
-        fi
-      args:
-        executable: /bin/bash
+    - name: 拉取最新的 APISIX Docker 镜像
+      docker_image:
+        name: apache/apisix:3.11.0
+        source: pull
 
-    - name: Clone APISIX Docker repo
-      git:
-        repo: 'https://github.com/apache/apisix-docker.git'
-        dest: '/tmp/apisix-docker'
-        update: yes
+    - name: 确保 APISIX 容器未运行
+      docker_container:
+        name: apisix
+        state: absent
 
-    - name: Start APISIX using Docker Compose
-      shell: |
-        cd /tmp/apisix-docker/example
-        /usr/local/bin/docker-compose up -d
-      args:
-        executable: /bin/bash
+    - name: 运行 APISIX 容器
+      docker_container:
+        name: apisix
+        image: apache/apisix:3.11.0
+        state: started
+        ports:
+          - "9080:9080"
+          - "9443:9443"
+        restart_policy: always
 
-    - name: Check if APISIX is running
-      uri:
-        url: "http://127.0.0.1:9080"
-        method: GET
-        status_code: 404
+    - name: 验证 APISIX 是否正常运行
+      shell: docker ps | grep apisix
       register: apisix_status
+      changed_when: false
 
-    - name: Show APISIX status
+    - name: 显示 APISIX 状态
       debug:
-        msg: "{{ apisix_status }}"
+        msg: "{{ apisix_status.stdout }}"
