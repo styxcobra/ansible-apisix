@@ -14,9 +14,16 @@
     - name: 拉取 etcd 最新 Docker 镜像
       shell: /usr/local/bin/docker pull gcr.io/etcd-development/etcd:v3.5.5
 
+    - name: 创建 Docker 自定义网络（如果不存在）
+      shell: |
+        if ! /usr/local/bin/docker network ls | grep -w apisix_net; then
+          /usr/local/bin/docker network create apisix_net
+        fi
+      ignore_errors: yes
+
     - name: 确保 etcd 容器未运行
       shell: |
-        if /usr/local/bin/docker ps -a --format '{% raw %}{{.Names}}{% endraw %}' | grep -w etcd; then
+        if /usr/local/bin/docker ps -a --format '{{"{{"}}.Names{{"}}"}}' | grep -w etcd; then
           /usr/local/bin/docker rm -f etcd
         fi
       ignore_errors: yes
@@ -24,6 +31,7 @@
     - name: 运行 etcd 容器
       shell: |
         /usr/local/bin/docker run -d --name etcd \
+          --network=apisix_net \  # ✅ 让 etcd 运行在 apisix_net 网络
           -p 2379:2379 \
           gcr.io/etcd-development/etcd:v3.5.5 \
           etcd --advertise-client-urls=http://0.0.0.0:2379 \
@@ -46,7 +54,7 @@
 
     - name: 确保 APISIX 容器未运行
       shell: |
-        if /usr/local/bin/docker ps -a --format '{% raw %}{{.Names}}{% endraw %}' | grep -w apisix; then
+        if /usr/local/bin/docker ps -a --format '{{"{{"}}.Names{{"}}"}}' | grep -w apisix; then
           /usr/local/bin/docker rm -f apisix
         fi
       ignore_errors: yes
@@ -54,14 +62,14 @@
     - name: 运行 APISIX 3.9.1-debian 容器
       shell: |
         /usr/local/bin/docker run -d --name apisix \
-          --network=bridge \
+          --network=apisix_net \  # ✅ 让 APISIX 也在 apisix_net 网络
           -p 9080:9080 -p 9443:9443 \
-          -e APISIX_ETCD_HOST="http://172.17.0.1:2379" \
+          -e APISIX_ETCD_HOST="http://etcd:2379" \  # ✅ 通过 etcd 容器名称连接
           apache/apisix:3.9.1-debian
 
     - name: 验证 APISIX 是否正常运行
       shell: |
-        /usr/local/bin/docker ps --format "{% raw %}{{.Names}}{% endraw %}" | grep -w apisix || true
+        /usr/local/bin/docker ps --format "{{"{{"}}.Names{{"}}"}}" | grep -w apisix || true
       register: apisix_status
       changed_when: false
 
