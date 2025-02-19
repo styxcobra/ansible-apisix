@@ -5,25 +5,25 @@
     ansible_become_password: "your_sudo_password"
   tasks:
     - name: 确保 Docker 运行
-      shell: systemctl start docker || open -a Docker
+      shell: open -a Docker || true
       ignore_errors: yes
 
-    - name: 拉取 APISIX 最新 Docker 镜像
-      shell: /usr/local/bin/docker pull apache/apisix:latest
+    - name: 拉取 APISIX 3.9.1 Docker 镜像
+      shell: docker pull apache/apisix:3.9.1
 
     - name: 拉取 etcd 最新 Docker 镜像
-      shell: /usr/local/bin/docker pull gcr.io/etcd-development/etcd:v3.5.5
+      shell: docker pull gcr.io/etcd-development/etcd:v3.5.5
 
     - name: 确保 etcd 容器未运行
       shell: |
-        if /usr/local/bin/docker ps -a --format '{% raw %}{{.Names}}{% endraw %}' | grep -w etcd; then
-          /usr/local/bin/docker rm -f etcd
+        if docker ps -a --format '{{"{{"}}.Names{{"}}"}}' | grep -w etcd; then
+          docker rm -f etcd
         fi
       ignore_errors: yes
 
     - name: 运行 etcd 容器
       shell: |
-        /usr/local/bin/docker run -d --name etcd \
+        docker run -d --name etcd \
           -p 2379:2379 \
           gcr.io/etcd-development/etcd:v3.5.5 \
           etcd --advertise-client-urls=http://127.0.0.1:2379 \
@@ -46,21 +46,21 @@
 
     - name: 确保 APISIX 容器未运行
       shell: |
-        if /usr/local/bin/docker ps -a --format '{% raw %}{{.Names}}{% endraw %}' | grep -w apisix; then
-          /usr/local/bin/docker rm -f apisix
+        if docker ps -a --format '{{"{{"}}.Names{{"}}"}}' | grep -w apisix; then
+          docker rm -f apisix
         fi
       ignore_errors: yes
 
-    - name: 运行 APISIX 容器
+    - name: 运行 APISIX 3.9.1 容器
       shell: |
-        /usr/local/bin/docker run -d --name apisix \
+        docker run -d --name apisix \
           -p 9080:9080 -p 9443:9443 \
           -e APISIX_ETCD_HOST="http://host.docker.internal:2379" \
-          apache/apisix:latest
+          apache/apisix:3.9.1
 
     - name: 验证 APISIX 是否正常运行
       shell: |
-        /usr/local/bin/docker ps --format "{% raw %}{{.Names}}{% endraw %}" | grep -w apisix || true
+        docker ps --format "{{"{{"}}.Names{{"}}"}}" | grep -w apisix || true
       register: apisix_status
       changed_when: false
 
