@@ -13,10 +13,14 @@
 
 
     - name: 确保 APISIX 容器未运行
-      shell: docker rm -f apisix || true
+      shell: |
+        if /usr/local/bin/docker ps -a --format '{{.Names}}' | grep -w apisix; then
+          /usr/local/bin/docker rm -f apisix
+        fi
+      ignore_errors: yes
 
     - name: 运行 APISIX 容器
-      shell: /usr/local/bin/docker run -d --name apisix  -p 9080:9080 -p 9443:9443  apache/apisix:latest
+      shell: /usr/local/bin/docker run -d --name apisix -p 9080:9080 -p 9443:9443 apache/apisix:latest 2>&1 | tee /tmp/apisix_run.log
 
 
     - name: 验证 APISIX 是否正常运行
