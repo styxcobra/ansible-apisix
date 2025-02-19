@@ -1,5 +1,6 @@
 - name: Install and Start APISIX on MacBook Pro
-  hosts: all
+  hosts: localhost
+  connection: local  # 让 Ansible 在本机执行，而不是通过 SSH
   become: yes  # 仍然需要 sudo
   vars:
     ansible_become_password: "your_sudo_password"
