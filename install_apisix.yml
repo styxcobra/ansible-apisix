@@ -55,8 +55,8 @@
       shell: |
         /usr/local/bin/docker run -d --name apisix \
           -p 9080:9080 -p 9443:9443 \
-          -e APISIX_ETCD_HOST="http://127.0.0.1:2379" \
-          apache/apisix:latest 2>&1 | tee /tmp/apisix_run.log
+          -e APISIX_ETCD_HOST="http://host.docker.internal:2379" \
+          apache/apisix:latest
 
     - name: 验证 APISIX 是否正常运行
       shell: |
