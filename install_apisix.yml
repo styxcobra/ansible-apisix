@@ -9,7 +9,8 @@
       ignore_errors: yes
 
     - name: 拉取 APISIX Docker 镜像
-      shell: docker pull apache/apisix:3.11.0
+      shell: /usr/local/bin/docker pull apache/apisix:3.11.0
+
 
     - name: 确保 APISIX 容器未运行
       shell: docker rm -f apisix || true
