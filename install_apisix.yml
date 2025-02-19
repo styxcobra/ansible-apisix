@@ -1,6 +1,6 @@
 - name: Install and Start APISIX on MacBook Pro
   hosts: all
-  become: yes  # 仍然需要 sudo
+  become: yes
   vars:
     ansible_become_password: "your_sudo_password"
   tasks:
@@ -24,14 +24,15 @@
     - name: 确保 etcd 容器未运行
       shell: |
         if /usr/local/bin/docker ps -a --format '{{"{{"}}.Names{{"}}"}}' | grep -w etcd; then
-          /usr/local/bin/docker rm -f etcd
+          /usr/local/bin/docker stop etcd
+          /usr/local/bin/docker rm etcd
         fi
       ignore_errors: yes
 
     - name: 运行 etcd 容器
       shell: |
         /usr/local/bin/docker run -d --name etcd \
-          --network=apisix_net \  # ✅ 让 etcd 运行在 apisix_net 网络
+          --network=apisix_net \
           -p 2379:2379 \
           gcr.io/etcd-development/etcd:v3.5.5 \
           etcd --advertise-client-urls=http://0.0.0.0:2379 \
@@ -55,16 +56,17 @@
     - name: 确保 APISIX 容器未运行
       shell: |
         if /usr/local/bin/docker ps -a --format '{{"{{"}}.Names{{"}}"}}' | grep -w apisix; then
-          /usr/local/bin/docker rm -f apisix
+          /usr/local/bin/docker stop apisix
+          /usr/local/bin/docker rm apisix
         fi
       ignore_errors: yes
 
     - name: 运行 APISIX 3.9.1-debian 容器
       shell: |
         /usr/local/bin/docker run -d --name apisix \
-          --network=apisix_net \  # ✅ 让 APISIX 也在 apisix_net 网络
+          --network=apisix_net \
           -p 9080:9080 -p 9443:9443 \
-          -e APISIX_ETCD_HOST="http://etcd:2379" \  # ✅ 通过 etcd 容器名称连接
+          -e APISIX_ETCD_HOST="http://etcd:2379" \
           apache/apisix:3.9.1-debian
 
     - name: 验证 APISIX 是否正常运行
