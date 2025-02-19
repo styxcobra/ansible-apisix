@@ -16,7 +16,7 @@
 
     - name: 确保 etcd 容器未运行
       shell: |
-        if /usr/local/bin/docker ps -a --format '{{.Names}}' | grep -w etcd; then
+        if /usr/local/bin/docker ps -a --format '{% raw %}{{.Names}}{% endraw %}' | grep -w etcd; then
           /usr/local/bin/docker rm -f etcd
         fi
       ignore_errors: yes
@@ -46,7 +46,7 @@
 
     - name: 确保 APISIX 容器未运行
       shell: |
-        if /usr/local/bin/docker ps -a --format '{{.Names}}' | grep -w apisix; then
+        if /usr/local/bin/docker ps -a --format '{% raw %}{{.Names}}{% endraw %}' | grep -w apisix; then
           /usr/local/bin/docker rm -f apisix
         fi
       ignore_errors: yes
@@ -59,7 +59,8 @@
           apache/apisix:latest 2>&1 | tee /tmp/apisix_run.log
 
     - name: 验证 APISIX 是否正常运行
-      shell: /usr/local/bin/docker ps | grep apisix
+      shell: |
+        /usr/local/bin/docker ps --format "{% raw %}{{.Names}}{% endraw %}" | grep -w apisix || true
       register: apisix_status
       changed_when: false
 
