@@ -16,8 +16,7 @@
       shell: docker rm -f apisix || true
 
     - name: 运行 APISIX 容器
-      become: yes
-      shell: /usr/local/bin/docker run -d --name apisix  -p 9080:9080 -p 9443:9443  apache/apisix:3.11.0
+      shell: /usr/local/bin/docker run -d --name apisix  -p 9080:9080 -p 9443:9443  apache/apisix:latest
 
 
     - name: 验证 APISIX 是否正常运行
