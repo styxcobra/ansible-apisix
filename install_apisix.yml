@@ -8,8 +8,8 @@
       shell: systemctl start docker || open -a Docker
       ignore_errors: yes
 
-    - name: 拉取 APISIX 最新 Docker 镜像
-      shell: /usr/local/bin/docker pull apache/apisix:latest
+    - name: 拉取 APISIX 最稳定的 Docker 镜像
+      shell: /usr/local/bin/docker pull apache/apisix:3.9.1
 
     - name: 拉取 etcd 最新 Docker 镜像
       shell: /usr/local/bin/docker pull gcr.io/etcd-development/etcd:v3.5.5
@@ -51,12 +51,12 @@
         fi
       ignore_errors: yes
 
-    - name: 运行 APISIX 容器
+    - name: 运行 APISIX 3.9.1 容器
       shell: |
         /usr/local/bin/docker run -d --name apisix \
           -p 9080:9080 -p 9443:9443 \
           -e APISIX_ETCD_HOST="http://host.docker.internal:2379" \
-          apache/apisix:latest
+          apache/apisix:3.9.1
 
     - name: 验证 APISIX 是否正常运行
       shell: |
