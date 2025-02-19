@@ -1,40 +1,29 @@
 - name: Install and Start APISIX on MacBook Pro
-  hosts: localhost
-  connection: local
-  become: yes
-  become_method: sudo  # ✅ Mac 需要明确使用 sudo
+  hosts: all
+  become: yes  # 仍然需要 sudo
   vars:
     ansible_become_password: "your_sudo_password"
   tasks:
     - name: 确保 Docker 运行
-      shell: open -a Docker || true
+      shell: systemctl start docker || open -a Docker
       ignore_errors: yes
 
-    - name: 确保 Docker 进程已启动
-      shell: pgrep -x Docker || (open -a Docker && sleep 10)
-      register: docker_status
-      ignore_errors: yes
-
-    - name: 显示 Docker 启动状态
-      debug:
-        msg: "{{ docker_status.stdout }}"
-
-    - name: 拉取 APISIX 3.9.1 Docker 镜像
-      shell: docker pull apache/apisix:3.9.1
+    - name: 拉取 APISIX 最新 Docker 镜像
+      shell: /usr/local/bin/docker pull apache/apisix:latest
 
     - name: 拉取 etcd 最新 Docker 镜像
-      shell: docker pull gcr.io/etcd-development/etcd:v3.5.5
+      shell: /usr/local/bin/docker pull gcr.io/etcd-development/etcd:v3.5.5
 
     - name: 确保 etcd 容器未运行
       shell: |
-        if docker ps -a --format '{{"{{"}}.Names{{"}}"}}' | grep -w etcd; then
-          docker rm -f etcd
+        if /usr/local/bin/docker ps -a --format '{% raw %}{{.Names}}{% endraw %}' | grep -w etcd; then
+          /usr/local/bin/docker rm -f etcd
         fi
       ignore_errors: yes
 
     - name: 运行 etcd 容器
       shell: |
-        docker run -d --name etcd \
+        /usr/local/bin/docker run -d --name etcd \
           -p 2379:2379 \
           gcr.io/etcd-development/etcd:v3.5.5 \
           etcd --advertise-client-urls=http://127.0.0.1:2379 \
@@ -57,21 +46,21 @@
 
     - name: 确保 APISIX 容器未运行
       shell: |
-        if docker ps -a --format '{{"{{"}}.Names{{"}}"}}' | grep -w apisix; then
-          docker rm -f apisix
+        if /usr/local/bin/docker ps -a --format '{% raw %}{{.Names}}{% endraw %}' | grep -w apisix; then
+          /usr/local/bin/docker rm -f apisix
         fi
       ignore_errors: yes
 
-    - name: 运行 APISIX 3.9.1 容器
+    - name: 运行 APISIX 容器
       shell: |
-        docker run -d --name apisix \
+        /usr/local/bin/docker run -d --name apisix \
           -p 9080:9080 -p 9443:9443 \
           -e APISIX_ETCD_HOST="http://host.docker.internal:2379" \
-          apache/apisix:3.9.1
+          apache/apisix:latest
 
     - name: 验证 APISIX 是否正常运行
       shell: |
-        docker ps --format "{{"{{"}}.Names{{"}}"}}" | grep -w apisix || true
+        /usr/local/bin/docker ps --format "{% raw %}{{.Names}}{% endraw %}" | grep -w apisix || true
       register: apisix_status
       changed_when: false
 
