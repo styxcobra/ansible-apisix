@@ -20,7 +20,7 @@
 
 
     - name: 验证 APISIX 是否正常运行
-      shell: docker ps | grep apisix
+      shell: /usr/local/sbin/docker ps | grep apisix
       register: apisix_status
       changed_when: false
 
