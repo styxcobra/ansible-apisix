@@ -1,13 +1,23 @@
 - name: Install and Start APISIX on MacBook Pro
   hosts: localhost
-  connection: local  # 让 Ansible 在本机执行，而不是通过 SSH
-  become: yes  # 仍然需要 sudo
+  connection: local
+  become: yes
+  become_method: sudo  # ✅ Mac 需要明确使用 sudo
   vars:
     ansible_become_password: "your_sudo_password"
   tasks:
     - name: 确保 Docker 运行
       shell: open -a Docker || true
       ignore_errors: yes
+
+    - name: 确保 Docker 进程已启动
+      shell: pgrep -x Docker || (open -a Docker && sleep 10)
+      register: docker_status
+      ignore_errors: yes
+
+    - name: 显示 Docker 启动状态
+      debug:
+        msg: "{{ docker_status.stdout }}"
 
     - name: 拉取 APISIX 3.9.1 Docker 镜像
       shell: docker pull apache/apisix:3.9.1
