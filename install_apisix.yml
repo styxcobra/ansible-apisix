@@ -26,7 +26,7 @@
         /usr/local/bin/docker run -d --name etcd \
           -p 2379:2379 \
           gcr.io/etcd-development/etcd:v3.5.5 \
-          etcd --advertise-client-urls=http://127.0.0.1:2379 \
+          etcd --advertise-client-urls=http://0.0.0.0:2379 \
                --listen-client-urls=http://0.0.0.0:2379
       ignore_errors: yes
 
@@ -54,8 +54,9 @@
     - name: 运行 APISIX 3.9.1-debian 容器
       shell: |
         /usr/local/bin/docker run -d --name apisix \
+          --network=host \
           -p 9080:9080 -p 9443:9443 \
-          -e APISIX_ETCD_HOST="http://host.docker.internal:2379" \
+          -e APISIX_ETCD_HOST="http://172.17.0.1:2379" \
           apache/apisix:3.9.1-debian
 
     - name: 验证 APISIX 是否正常运行
