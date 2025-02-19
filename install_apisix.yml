@@ -8,8 +8,8 @@
       shell: systemctl start docker || open -a Docker
       ignore_errors: yes
 
-    - name: 拉取 APISIX Docker 镜像
-      shell: /usr/local/bin/docker pull apache/apisix:3.11.0
+    - name: 拉取 APISIX 最新 Docker 镜像
+      shell: /usr/local/bin/docker pull apache/apisix:latest
 
 
     - name: 确保 APISIX 容器未运行
