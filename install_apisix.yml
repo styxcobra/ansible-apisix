@@ -1,8 +1,10 @@
 - name: Install and Start APISIX on MacBook Pro
   hosts: all
-  become: yes
+  become: yes  # 仍然需要 sudo
+  vars:
+    ansible_become_password: "your_sudo_password"
   tasks:
-    - name: 确保 Docker 正在运行
+    - name: 确保 Docker 运行
       shell: systemctl start docker || open -a Docker
       ignore_errors: yes
 
