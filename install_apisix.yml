@@ -14,10 +14,13 @@
     - name: 拉取 etcd 最新 Docker 镜像
       shell: /usr/local/bin/docker pull gcr.io/etcd-development/etcd:v3.5.5
 
+    # ✅ 修改 1：创建自定义网络时，指定了子网
     - name: 创建 Docker 自定义网络（如果不存在）
       shell: |
         if ! /usr/local/bin/docker network ls | grep -w apisix_net; then
-          /usr/local/bin/docker network create apisix_net
+          /usr/local/bin/docker network create \
+            --subnet 172.19.0.0/16 \   # ✅ 添加子网，保证 IP 地址固定
+            apisix_net
         fi
       ignore_errors: yes
 
@@ -29,10 +32,12 @@
         fi
       ignore_errors: yes
 
+    # ✅ 修改 2：运行 etcd 容器时，指定静态 IP
     - name: 运行 etcd 容器
       shell: |
         /usr/local/bin/docker run -d --name etcd \
           --network=apisix_net \
+          --ip 172.19.0.2 \   # ✅ 为 etcd 容器指定静态 IP
           -p 2379:2379 \
           gcr.io/etcd-development/etcd:v3.5.5 \
           etcd --advertise-client-urls=http://0.0.0.0:2379 \
@@ -68,12 +73,13 @@
         fi
       ignore_errors: yes
 
+    # ✅ 保持不变，但保证 APISIX 正确连接到 etcd
     - name: 运行 APISIX 3.9.1-debian 容器
       shell: |
         /usr/local/bin/docker run -d --name apisix \
           --network=apisix_net \
           -p 9080:9080 -p 9443:9443 \
-          -e APISIX_ETCD_HOST="http://172.19.0.2:2379" \
+          -e APISIX_ETCD_HOST="http://172.19.0.2:2379" \  # ✅ 配置 APISIX 使用固定 IP 的 etcd
           apache/apisix:3.9.1-debian
 
     - name: 验证 APISIX 是否正常运行
