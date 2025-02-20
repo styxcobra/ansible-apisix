@@ -66,7 +66,7 @@
         /usr/local/bin/docker run -d --name apisix \
           --network=apisix_net \
           -p 9080:9080 -p 9443:9443 \
-          -e APISIX_ETCD_HOST="http://etcd:2379" \
+          -e APISIX_ETCD_HOST="http://172.19.0.2:2379" \
           apache/apisix:3.9.1-debian
 
     - name: 验证 APISIX 是否正常运行
