@@ -53,6 +53,13 @@
       debug:
         msg: "{{ etcd_status.stdout }}"
 
+
+    - name: 删除旧的 APISIX 容器和卷
+      shell: |
+        docker rm -f apisix || true
+        docker volume rm $(docker volume ls -qf dangling=true) || true
+      ignore_errors: yes
+
     - name: 确保 APISIX 容器未运行
       shell: |
         if /usr/local/bin/docker ps -a --format '{{"{{"}}.Names{{"}}"}}' | grep -w apisix; then
