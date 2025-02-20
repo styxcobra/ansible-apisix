@@ -74,6 +74,7 @@
           --network=apisix_net \
           -p 9080:9080 -p 9443:9443 \
           -e APISIX_ETCD_HOST="http://172.19.0.2:2379" \
+          -v /Users/long/config.yaml:/usr/local/apisix/conf/config.yaml \
           apache/apisix:3.9.1-debian
 
     - name: 验证 APISIX 是否正常运行
